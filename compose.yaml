@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - application.env
+      - database.env
+    depends_on:
+      - database
+
+  database:
+    image: postgres:16
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    env_file:
+      - database.env
