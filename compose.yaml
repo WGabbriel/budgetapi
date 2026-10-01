@@ -7,11 +7,22 @@ services:
       - application.env
       - database.env
     depends_on:
-      - database
+      database:
+        condition: service_healthy
 
   database:
     image: postgres:16
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "5432:5432"
     env_file:
       - database.env
+    volumes:
+      - transaction_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  transaction_data:

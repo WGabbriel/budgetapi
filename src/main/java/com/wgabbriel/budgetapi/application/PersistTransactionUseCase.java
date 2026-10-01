@@ -1,10 +1,13 @@
 package com.wgabbriel.budgetapi.application;
 
+import org.springframework.stereotype.Service;
+
 import com.wgabbriel.budgetapi.application.input.PersistTransactionInput;
 import com.wgabbriel.budgetapi.application.output.TransactionOutput;
 import com.wgabbriel.budgetapi.domain.Transaction;
 import com.wgabbriel.budgetapi.domain.TransactionRepository;
 
+@Service
 public class PersistTransactionUseCase {
   private final TransactionRepository transactionRepository;
 
