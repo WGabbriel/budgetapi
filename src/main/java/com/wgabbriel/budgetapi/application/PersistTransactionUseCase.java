@@ -1,5 +1,6 @@
 package com.wgabbriel.budgetapi.application;
 
+import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Service;
 
 import com.wgabbriel.budgetapi.application.input.PersistTransactionInput;
@@ -15,6 +16,7 @@ public class PersistTransactionUseCase {
     this.transactionRepository = transactionRepository;
   }
 
+  @Tool(name = "persist_transaction", description = "Persist a transaction in the database")
   public TransactionOutput execute(PersistTransactionInput input) {
     var transaction = transactionRepository
         .save(new Transaction(input.description(), input.amount(), input.category()));
