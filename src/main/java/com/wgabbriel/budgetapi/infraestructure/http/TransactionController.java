@@ -29,8 +29,17 @@ import com.wgabbriel.budgetapi.domain.Category;
 import com.wgabbriel.budgetapi.infraestructure.http.request.TransactionRequest;
 import com.wgabbriel.budgetapi.infraestructure.http.response.TransactionResponse;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/transactions")
+@Tag(name = "Transações", description = "Operações de criação, listagem e interação por voz com transações.")
 public class TransactionController {
 
   private final PersistTransactionUseCase persistTransactionUseCase;
@@ -56,20 +65,37 @@ public class TransactionController {
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
+  @Operation(summary = "Criar transação", description = "Registra uma nova transação financeira a partir dos dados informados.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "201", description = "Transação criada com sucesso"),
+      @ApiResponse(responseCode = "400", description = "Dados da transação inválidos", content = @Content)
+  })
   public TransactionResponse createTransaction(@RequestBody TransactionRequest request) {
     var transaction = persistTransactionUseCase.execute(request.toInput());
     return TransactionResponse.from(transaction);
   }
 
   @GetMapping("/{category}")
-  public List<TransactionResponse> readTransactions(@PathVariable Category category) {
+  @Operation(summary = "Listar transações por categoria", description = "Retorna todas as transações pertencentes à categoria informada.")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Lista de transações retornada com sucesso"),
+      @ApiResponse(responseCode = "400", description = "Categoria inválida", content = @Content)
+  })
+  public List<TransactionResponse> readTransactions(
+      @Parameter(description = "Categoria das transações a serem listadas", example = "GROCERIES") @PathVariable Category category) {
     return listTransactionByCategoryUseCase.execute(category).stream()
         .map(TransactionResponse::from)
         .toList();
   }
 
   @PostMapping(value = "/ai", consumes = MediaType.MULTIPART_FORM_DATA_VALUE, produces = "audio/mp3")
-  public ResponseEntity<Resource> transcribe(@RequestParam("file") MultipartFile file) {
+  @Operation(summary = "Interagir por voz", description = "Transcreve um áudio com a descrição de um gasto, processa a mensagem via IA e retorna a resposta em áudio (mp3).")
+  @ApiResponses({
+      @ApiResponse(responseCode = "200", description = "Áudio de resposta gerado com sucesso", content = @Content(mediaType = "audio/mp3", schema = @Schema(type = "string", format = "binary"))),
+      @ApiResponse(responseCode = "400", description = "Arquivo de áudio inválido ou ausente", content = @Content)
+  })
+  public ResponseEntity<Resource> transcribe(
+      @Parameter(description = "Arquivo de áudio contendo a descrição do gasto") @RequestParam("file") MultipartFile file) {
     
     var userMessage = transcriptionModel.transcribe(file.getResource());
     var result = chatClient.prompt().user(userMessage).call().content();
