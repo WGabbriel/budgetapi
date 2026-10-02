@@ -18,8 +18,9 @@ public class PersistTransactionUseCase {
 
   @Tool(name = "persist_transaction", description = "Persist a transaction in the database")
   public TransactionOutput execute(PersistTransactionInput input) {
+    var normalizedAmount = MoneyNormalizer.normalize(input.amount());
     var transaction = transactionRepository
-        .save(new Transaction(input.description(), input.amount(), input.category()));
+        .save(new Transaction(input.description(), normalizedAmount, input.category()));
     return TransactionOutput.from(transaction);
   }
 }
